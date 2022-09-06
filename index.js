@@ -1,78 +1,75 @@
-const string = require("./mochData");
+///2015_06
+const mochData = require("./mochData");
 
-let dataArr = string.split("\n");
+//PART1
 
-console.log("length " + dataArr.length);
+function parseMochData(mochData) {
+  let dataArr = mochData.split("\n");
+  dataArr = dataArr.map((elem) => elem.split(" through "));
 
-function threeVowels(str) {
+  dataArr = dataArr.map((elem) => {
+    if (elem[0].indexOf("turn on") !== -1)
+      return ["turn on", elem[0].replace("turn on ", ""), elem[1]];
+    if (elem[0].indexOf("turn off") !== -1)
+      return ["turn off", elem[0].replace("turn off ", ""), elem[1]];
+    if (elem[0].indexOf("toggle") !== -1)
+      return ["toggle", elem[0].replace("toggle ", ""), elem[1]];
+  });
+
+  return dataArr;
+}
+
+function inicializeArr() {
+  let allLigths = [];
+  for (let i = 0; i < 1000; i++) {
+    let newArr = [];
+    for (let j = 0; j < 1000; j++) {
+      newArr.push(false);
+    }
+    allLigths.push(newArr);
+  }
+  return allLigths;
+}
+
+function calculateCount(data) {
   let count = 0;
-  let volwels = ["a", "e", "o", "i", "u"];
-
-  volwels.forEach((elem) => {
-    str.split("").forEach((word) => {
-      if (elem === word) count++;
+  data.forEach((line) => {
+    line.forEach((elem) => {
+      if (elem) count++;
     });
   });
-  if (count >= 3) return true;
-  return false;
+  return count;
 }
 
-function twoLettersAround(str) {
-  for (let i = 0; i < str.length - 1; i++) {
-    if (str[i] === str[i + 1]) {
-      return true;
+function actionByLigth(action) {
+  // console.log(action);
+  let firstCoordinate = action[1].split(",");
+  let lastCoordinate = action[2].split(",");
+  // console.log(firstCoordinate, lastCoordinate);
+  for (let i = firstCoordinate[0]; i <= 999; i++) {
+    for (let j = firstCoordinate[1]; j <= 999; j++) {
+      if (action[0] === "turn off") allLigths[i][j] = false;
+      if (action[0] === "turn on") allLigths[i][j] = true;
+      if (action[0] === "toggle") allLigths[i][j] = !allLigths[i][j];
+      if (i === lastCoordinate[0] && j === lastCoordinate[1]) return;
     }
   }
-  return false;
 }
 
-function checkContainWords(str) {
-  let conteiner = ["ab", "cd", "pq", "xy"];
-  let flag = true;
-  conteiner.forEach((elem) => {
-    if (str.indexOf(elem) !== -1) {
-      flag = false;
-    }
-  });
-  return flag;
-}
+// 0 1 2 3 4 5 // 1, 1  2, 2
+// 0 1 2 3 4 5 // [1,1] [1,2] [1,3], [1,4], [1,5], [2,1] [2, 2]
+// 0 1 2 3 4 5
+// 0 1 2 3 4 5
+// 0 1 2 3 4 5
 
-let counter = 0;
-dataArr.forEach((elem) => {
-  if (threeVowels(elem) && twoLettersAround(elem) && checkContainWords(elem)) {
-    counter++;
-  }
-});
+// data format [action, first coordinate, second coordinate]
+let data = parseMochData(mochData);
+console.log("action in moch " + data.length);
+//inisialize matrix by false;
+let allLigths = inicializeArr();
 
-console.log(counter);
+//lets Rock
+data.forEach((elem) => actionByLigth(elem));
 
-//PART 2
-
-console.log("PART 2");
-
-function doubleParts(str) {
-  for (let i = 0; i < str.length - 2; i++) {
-    let subStr = str.slice(i, i + 2);
-    // console.log(str, subStr);
-    let lastIndex = str.lastIndexOf(subStr);
-    let index = str.indexOf(subStr);
-    if (lastIndex - index !== 0 && lastIndex - index !== 1) return true;
-  }
-  return false;
-}
-
-function letterBetween(str) {
-  for (let i = 0; i < str.length - 2; i++) {
-    if (str[i] === str[i + 2]) return true;
-  }
-  return false;
-}
-
-counter = 0;
-dataArr.forEach((elem) => {
-  if (doubleParts(elem) && letterBetween(elem)) {
-    counter++;
-  }
-});
-
-console.log(counter);
+//calculate true count
+console.log(calculateCount(allLigths));
