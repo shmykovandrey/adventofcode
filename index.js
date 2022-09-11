@@ -1,133 +1,116 @@
-///2015_06
-const mochData = require("./mochData");
+///2015_07
+mochData = require("./mochDataTest");
+mochData = require("./mochData");
 
 //PART1
 
-// function parseMochData(mochData) {
-//   let dataArr = mochData.split("\n");
-//   dataArr = dataArr.map((elem) => elem.split(" through "));
-
-//   dataArr = dataArr.map((elem) => {
-//     if (elem[0].indexOf("turn on") !== -1)
-//       return ["turn on", elem[0].replace("turn on ", ""), elem[1]];
-//     if (elem[0].indexOf("turn off") !== -1)
-//       return ["turn off", elem[0].replace("turn off ", ""), elem[1]];
-//     if (elem[0].indexOf("toggle") !== -1)
-//       return ["toggle", elem[0].replace("toggle ", ""), elem[1]];
-//   });
-
-//   return dataArr;
-// }
-
-// function inicializeArr() {
-//   let allLigths = [];
-//   for (let i = 0; i < 1000; i++) {
-//     let newArr = [];
-//     for (let j = 0; j < 1000; j++) {
-//       newArr.push(false);
-//     }
-//     allLigths.push(newArr);
-//   }
-//   return allLigths;
-// }
-
-// function calculateCount(data) {
-//   let count = 0;
-//   data.forEach((line) => {
-//     line.forEach((elem) => {
-//       if (elem) count++;
-//     });
-//   });
-//   return count;
-// }
-
-// function actionByLigth(action) {
-//   let firstCoordinate = action[1].split(",");
-//   let lastCoordinate = action[2].split(",");
-//   for (let i = +firstCoordinate[0]; i <= +lastCoordinate[0]; i++) {
-//     for (let j = +firstCoordinate[1]; j <= +lastCoordinate[1]; j++) {
-//       if (action[0] === "turn on") allLigths[i][j] = true;
-//       if (action[0] === "toggle") allLigths[i][j] = !allLigths[i][j];
-//       if (action[0] === "turn off") allLigths[i][j] = false;
-//       }
-//     }
-// }
-
-// let data = parseMochData(mochData);
-// console.log("action in moch " + data.length);
-// //inisialize matrix by false;
-// let allLigths = inicializeArr();
-
-// //lets Rock
-// data.forEach((elem) => actionByLigth(elem));
-
-// //calculate true count
-// console.log(calculateCount(allLigths));
-
-
-
-//PART 2
-
-function parseMochData(mochData) {
-  let dataArr = mochData.split("\n");
-  dataArr = dataArr.map((elem) => elem.split(" through "));
-
-  dataArr = dataArr.map((elem) => {
-    if (elem[0].indexOf("turn on") !== -1)
-      return ["turn on", elem[0].replace("turn on ", ""), elem[1]];
-    if (elem[0].indexOf("turn off") !== -1)
-      return ["turn off", elem[0].replace("turn off ", ""), elem[1]];
-    if (elem[0].indexOf("toggle") !== -1)
-      return ["toggle", elem[0].replace("toggle ", ""), elem[1]];
+function readMoch(mochData) {
+  dataArr = mochData.split("\n");
+  operandsArr = dataArr.map((elem) => elem.split(" -> "));
+  operandsArr = operandsArr.map((elem) => {
+    if (elem[0].indexOf("AND") !== -1)
+      return ["AND", elem[0].split(" AND "), elem[1]];
+    if (elem[0].indexOf("NOT") !== -1)
+      return ["NOT", elem[0].replace("NOT ", ""), elem[1]];
+    if (elem[0].indexOf("LSHIFT") !== -1)
+      return ["LSHIFT", elem[0].split(" LSHIFT "), elem[1]];
+    if (elem[0].indexOf("RSHIFT") !== -1)
+      return ["RSHIFT", elem[0].split(" RSHIFT "), elem[1]];
+    if (elem[0].indexOf("OR") !== -1)
+      return ["OR", elem[0].split(" OR "), elem[1]];
+    return ["=", elem[0], elem[1]];
   });
-
-  return dataArr;
+  return operandsArr;
 }
 
-function inicializeArr() {
-  let allLigths = [];
-  for (let i = 0; i < 1000; i++) {
-    let newArr = [];
-    for (let j = 0; j < 1000; j++) {
-      newArr.push(0);
+function isNumber(num) {
+  if (num === "0" || num === 0) return true;
+  if (isNaN(+num)) return false;
+  if (!!num) return true;
+  return false;
+}
+
+function workWithData(parsedData) {
+  parsedData.forEach((elem) => {
+    // console.log(elem);
+    let current = null;
+    /// if =
+    if (elem[0] === "=") {
+      if (isNumber(elem[1])) current = +elem[1];
+      if (isNumber(allWise[elem[1]])) current = +allWise[elem[1]];
+      allWise[elem[2]] = current;
     }
-    allLigths.push(newArr);
-  }
-  return allLigths;
+    //// if NOT
+    if (elem[0] === "NOT") {
+      if (isNumber(elem[1])) current = elem[1];
+      if (isNumber(allWise[elem[1]])) current = allWise[elem[1]];
+      if (isNumber(current))
+        allWise[elem[2]] = +(
+          "0b" +
+          ("0".repeat(16 - current.toString(2).length) + current.toString(2))
+            .split("")
+            .map((el) => (el === "0" ? "1" : "0"))
+            .join("")
+        );
+    }
+    //// if AND
+    if (elem[0] === "AND") {
+      let current1 = null;
+      let current2 = null;
+      if (isNumber(elem[1][0])) current1 = elem[1][0];
+      if (isNumber(elem[1][1])) current2 = elem[1][1];
+      if (isNumber(allWise[elem[1][0]])) current1 = allWise[elem[1][0]];
+      if (isNumber(allWise[elem[1][1]])) current2 = allWise[elem[1][1]];
+      if (isNumber(current1) && isNumber(current2))
+        allWise[elem[2]] = current1 & current2;
+    }
+    if (elem[0] === "OR") {
+      let current1 = null;
+      let current2 = null;
+      if (isNumber(elem[1][0])) current1 = elem[1][0];
+      if (isNumber(elem[1][1])) current2 = elem[1][1];
+      if (isNumber(allWise[elem[1][0]])) current1 = allWise[elem[1][0]];
+      if (isNumber(allWise[elem[1][1]])) current2 = allWise[elem[1][1]];
+      if (isNumber(current1) && isNumber(current2))
+        allWise[elem[2]] = current1 | current2;
+    }
+    if (elem[0] === "LSHIFT") {
+      if (isNumber(elem[1][0])) current = elem[1][0];
+      if (isNumber(allWise[elem[1][0]])) current = allWise[elem[1][0]];
+      if (isNumber(current)) allWise[elem[2]] = current << +elem[1][1];
+    }
+    if (elem[0] === "RSHIFT") {
+      if (isNumber(elem[1][0])) current = elem[1][0];
+      if (isNumber(allWise[elem[1][0]])) current = allWise[elem[1][0]];
+      if (isNumber(current)) allWise[elem[2]] = current >> +elem[1][1];
+    }
+  });
 }
 
-function calculateCount(data) {
+function inicializeAllWise(parsedData) {
+  parsedData.forEach((elem) => (allWise[elem[2]] = null));
+}
+
+function haveNoNull(obj) {
+  let flag = true;
+  Object.keys(obj).forEach((elem) => {
+    if (obj[elem] === null) flag = false;
+  });
+  return flag;
+}
+//read moch data
+let parsedData = readMoch(mochData);
+const allWise = {};
+
+inicializeAllWise(parsedData);
+
+while (!haveNoNull(allWise)) {
+  workWithData(parsedData);
+
   let count = 0;
-  data.forEach((line) => {
-    line.forEach((elem) => {
-      if (elem) count+=elem;
-    });
-  });
-  return count;
+  for (key in allWise) {
+    if (allWise[key] !== null) count++;
+  }
+  console.log(count);
 }
-
-function actionByLigth(action) {
-  let firstCoordinate = action[1].split(",");
-  let lastCoordinate = action[2].split(",");
-  for (let i = +firstCoordinate[0]; i <= +lastCoordinate[0]; i++) {
-    for (let j = +firstCoordinate[1]; j <= +lastCoordinate[1]; j++) {
-      if (action[0] === "turn on") allLigths[i][j] += 1;
-      if (action[0] === "toggle") allLigths[i][j] += 2;
-      if (action[0] === "turn off") allLigths[i][j] > 0 ? allLigths[i][j] -= 1: allLigths[i][j] = 0;
-      }
-    }
-}
-
-
-
-let data = parseMochData(mochData);
-console.log("action in moch " + data.length);
-//inisialize matrix by false;
-let allLigths = inicializeArr();
-
-//lets Rock
-data.forEach((elem) => actionByLigth(elem));
-
-// //calculate brigth count
-console.log(calculateCount(allLigths));
-
+console.log(allWise.a);
